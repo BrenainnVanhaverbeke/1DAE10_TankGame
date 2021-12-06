@@ -570,6 +570,13 @@ namespace utils
 		return false;
 	}
 
+	Point2f GetCenterOfRectangle(const Rectf& rectangle)
+	{
+		float x{ (rectangle.left * 2 + rectangle.width) / 2 };
+		float y{ (rectangle.bottom * 2 + rectangle.height) / 2 };
+		return Point2f{ x, y };
+	}
+
 #pragma endregion CollisionFunctionality
 
 #pragma region VectorFunctionality

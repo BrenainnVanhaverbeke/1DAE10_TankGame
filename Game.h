@@ -2,19 +2,60 @@
 using namespace utils;
 #pragma region gameInformation
 // Set your name and group in the title here
-std::string g_WindowTitle{ "Project name - Name, firstname - 1DAExx" };
+std::string g_WindowTitle{ "Tank Game - Brenainn + Tom - 1DAE10-11" };
 
 // Change the window dimensions here
 float g_WindowWidth{ 1280 };
 float g_WindowHeight{ 720 };
 #pragma endregion gameInformation
 
+enum class TankOrientation
+{
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+	END
+};
 
+struct Tank
+{
+	int rowIndex;
+	int columnIndex;
+	int health;
+	float barrelAngle;
+	TankOrientation orientation;
+};
 
 #pragma region ownDeclarations
 // Declare your own global variables here
 
+const float g_SideLength{ 80.0f };
+const int g_GridRows{ (int)(g_WindowHeight / g_SideLength) };
+const int g_GridColumns{ (int)(g_WindowWidth / g_SideLength) };
+const int g_AmountOfGridCells{ g_GridRows * g_GridColumns };
+const int g_AmountOfPlayers{ 2 };
+
+const Color4f g_White{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+int g_TurnCounter{ 0 };
+
+Point2f g_MousePosition{};
+
+bool* g_IsCellFree{ new bool[g_AmountOfGridCells] };
+Tank* g_Tanks{ new Tank[g_AmountOfPlayers] };
+
 // Declare your own functions here
+
+void InitialiseBorder();
+void InitialiseTanks();
+void MoveTank(TankOrientation direction);
+void DrawGrid();
+void DrawTanks();
+void DrawBarrel();
+void CalculateBarrelAngle(const Point2f& mousePosition);
+
+int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns);
 
 #pragma endregion ownDeclarations
 
