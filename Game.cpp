@@ -38,6 +38,7 @@ void Update(float elapsedSec)
 void End()
 {
 	EndBackground();
+	EndTile();
 	// free game resources here
 }
 #pragma endregion gameFunctions
@@ -253,15 +254,10 @@ void InitTile()
 	bool isCreationOk{};
 	isCreationOk = TextureFromFile("Resources/Block.png", g_Tile);
 };
-void DrawTile() 
-{
-	
-};
+
 void EndTile() 
 {
-	
-
-
+	DeleteTexture(g_Tile);
 };
 
 Point2f GetCenterOfRectangle(const Rectf &Rect) 
