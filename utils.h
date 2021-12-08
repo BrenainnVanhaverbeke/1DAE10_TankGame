@@ -114,4 +114,10 @@ namespace utils
 	float GetRandomNumber(int lowestValue, int highestValue, bool isInclusive = true);
 
 #pragma endregion GeneralUtils
+
+#pragma region GameSpecificUtils
+
+	float GetBarrelAngle(const Point2f& tankCenter, const Point2f& mousePosition);
+
+#pragma endregion GameSpecificUtils
 }

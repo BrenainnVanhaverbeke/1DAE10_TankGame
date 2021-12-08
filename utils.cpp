@@ -677,4 +677,15 @@ namespace utils
 	}
 
 #pragma endregion GeneralUtils
+
+#pragma region GameSpecificUtils
+
+	float GetBarrelAngle(const Point2f& tankCenter, const Point2f& mousePosition)
+	{
+		float xDifference{ mousePosition.x - tankCenter.x  };
+		float yDifference{ mousePosition.y - tankCenter.y };
+		return atan2(yDifference, xDifference);
+	}
+
+#pragma endregion GameSpecificUtils
 }

@@ -93,6 +93,20 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 #pragma region ownDefinitions
 // Define your own functions here
 
+void InitBackground()
+{
+	bool isCreationOk{ TextureFromFile("Resources/Grass.png", g_Background) };
+	if (!isCreationOk)
+		std::cout << "Error loading Grass.png" << std::endl;
+}
+
+void InitTile()
+{
+	bool isCreationOk{ TextureFromFile("Resources/Block.png", g_Tile) };
+	if (!isCreationOk)
+		std::cout << "Error loading texture Block.png" << std::endl;
+}
+
 void InitialiseBorder()
 {
 	for (int row{ 0 }; row < g_GridRows; row++)
@@ -113,12 +127,12 @@ void InitialiseTanks()
 	const int initialHealth{ 3 };
 	Tank& tank = g_Tanks[0];
 	tank.columnIndex = 1;
-	tank.rowIndex = g_GridRows - 2;	
+	tank.rowIndex = g_GridRows - 2;
 	tank.health = initialHealth;
 	int tankLocationIndex{ GetLinearIndexFrom2D(tank.rowIndex, tank.columnIndex, g_GridColumns) };
 	g_IsCellFree[tankLocationIndex] = false;
 	Tank& tank2 = g_Tanks[1];
-	tank2.columnIndex = g_GridColumns -2;
+	tank2.columnIndex = g_GridColumns - 2;
 	tank2.rowIndex = 1;
 	tank2.health = initialHealth;
 	int tank2LocationIndex{ GetLinearIndexFrom2D(tank2.rowIndex, tank2.columnIndex, g_GridColumns) };
@@ -161,24 +175,24 @@ void CalculateBarrelAngle(const Point2f& mousePosition)
 {
 	Tank& activeTank{ g_Tanks[g_TurnCounter] };
 	Rectf tankRectangle{ g_SideLength * activeTank.columnIndex, g_SideLength * activeTank.rowIndex, g_SideLength, g_SideLength };
-	
+
 	Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
-	float barrelAngle{/* Magic Happens Here */ };
+	float barrelAngle{ GetBarrelAngle(tankCenter, mousePosition) };
 	activeTank.barrelAngle = barrelAngle;
 }
 
-void InitializeObstacle() 
+void InitializeObstacle()
 {
 	int nbrOfObstacles{ 20 };
-	
-	for (int i{}; i < nbrOfObstacles ; i++)
-	{ 
-			int rdmRow{rand()%(g_GridRows-2) + 1};
-			int rdmColumn{ rand() % (g_GridColumns-2) +1 };
 
-			int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
-			if (g_IsCellFree[index] == false) --i;
-			g_IsCellFree[index] = false;
+	for (int i{}; i < nbrOfObstacles; i++)
+	{
+		int rdmRow{ rand() % (g_GridRows - 2) + 1 };
+		int rdmColumn{ rand() % (g_GridColumns - 2) + 1 };
+
+		int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
+		if (g_IsCellFree[index] == false) --i;
+		g_IsCellFree[index] = false;
 	}
 
 
@@ -216,14 +230,20 @@ void DrawGrid()
 void DrawTanks()
 {
 	const Color4f tankColour{ 0.0f, 0.75f, 0.0f, 1.0f };
-	SetColor(tankColour);
+	const Color4f barrelColour{ 0.0f, 0.0f, 0.0f, 1.0f };
+	const float barrelLength{ 60.0f };
 	Rectf tankDestination{ 0, 0, g_SideLength, g_SideLength };
 	for (int player = 0; player < g_AmountOfPlayers; player++)
 	{
 		Tank& tank{ g_Tanks[player] };
 		tankDestination.left = tank.columnIndex * g_SideLength;
 		tankDestination.bottom = tank.rowIndex * g_SideLength;
+		SetColor(tankColour);
 		FillRect(tankDestination);
+		Point2f tankCenter{ GetCenterOfRectangle(tankDestination) };
+		Point2f barrelEnd{ GetCoordinatesFromRadians(barrelLength, tank.barrelAngle, tankCenter) };
+		SetColor(barrelColour);
+		DrawLine(tankCenter, barrelEnd, 3.0f);
 	}
 }
 
@@ -232,37 +252,24 @@ int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns)
 	return rowIndex * nrOfColumns + columnIndex;
 }
 
-void InitBackground()
+
+
+void DrawBackground()
 {
-	bool isCreationOk{};
-	isCreationOk = TextureFromFile("Resources/Grass.png", g_Background);
-}
-void DrawBackground() 
-{
-	Point2f bottom{0,0};
+	Point2f bottom{ 0,0 };
 	DrawTexture(g_Background, bottom);
-};
+}
 
 void EndBackground()
 {
 	DeleteTexture(g_Background);
-};
+}
 
 
-void InitTile() 
-{
-	bool isCreationOk{};
-	isCreationOk = TextureFromFile("Resources/Block.png", g_Tile);
-};
 
-void EndTile() 
+void EndTile()
 {
 	DeleteTexture(g_Tile);
-};
+}
 
-Point2f GetCenterOfRectangle(const Rectf &Rect) 
-{
-	return Point2f{ 2,5 };
-	
-};
 #pragma endregion ownDefinitions
