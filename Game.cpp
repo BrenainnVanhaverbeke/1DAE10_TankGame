@@ -14,7 +14,7 @@ void Start()
 	InitialiseTanks();
 	InitBackground();
 	InitTile();
-	InitializeObstacle();
+	InitializeObstacle(g_Tanks);
 
 
 }
@@ -167,24 +167,38 @@ void CalculateBarrelAngle(const Point2f& mousePosition)
 	activeTank.barrelAngle = barrelAngle;
 }
 
-void InitializeObstacle() 
+void InitializeObstacle(Tank* g_Tanks)
 {
 	int nbrOfObstacles{ 20 };
-	
-	for (int i{}; i < nbrOfObstacles ; i++)
-	{ 
-			int rdmRow{rand()%(g_GridRows-2) + 1};
-			int rdmColumn{ rand() % (g_GridColumns-2) +1 };
 
+
+	for (int i{}; i < nbrOfObstacles; ++i)
+	{
+		int rdmRow{ rand() % (g_GridRows - 2) + 1 };
+		int rdmColumn{ rand() % (g_GridColumns - 2) + 1 };
+		int rdmIndex{ GetLinearIndexFrom2D(rdmRow, rdmColumn, 16) };
+
+
+		int tankIndex =GetLinearIndexFrom2D(1, 14, 16);
+
+		if ((tankIndex+1 == rdmIndex) || tankIndex-1 == rdmIndex ||tankIndex+g_GridColumns-1 == rdmIndex|| tankIndex + g_GridColumns + 1== rdmIndex)
+		{
+			--i;
+
+		}
+		else
+		{
+
+		}
+		{
 			int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
 			if (g_IsCellFree[index] == false) --i;
-			g_IsCellFree[index] = false;
-	}
+			g_IsCellFree[index] = false;	
 
+		}
 
-	int index{ GetLinearIndexFrom2D(5, 5, g_GridColumns) };
-	g_IsCellFree[index] = false;
-};
+	};
+}
 
 void DrawGrid()
 {
