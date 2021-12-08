@@ -9,6 +9,18 @@ float g_WindowWidth{ 1280 };
 float g_WindowHeight{ 720 };
 #pragma endregion gameInformation
 
+
+
+Texture g_Background{};
+void InitBackground();
+void DrawBackground();
+void EndBackground();
+
+Texture g_Tile{};
+void InitTile();
+void DrawTile();
+void EndTile();
+
 enum class TankOrientation
 {
 	UP,
@@ -54,6 +66,9 @@ void DrawGrid();
 void DrawTanks();
 void DrawBarrel();
 void CalculateBarrelAngle(const Point2f& mousePosition);
+void InitializeObstacle();
+Point2f GetCenterOfRectangle();
+
 
 int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns);
 

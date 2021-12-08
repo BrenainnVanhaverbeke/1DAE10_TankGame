@@ -6,19 +6,28 @@
 #include <iostream>
 
 //Basic game functions
-#pragma region gameFunctions											
+#pragma region gameFunctions
+
 void Start()
 {
 	InitialiseBorder();
 	InitialiseTanks();
+	InitBackground();
+	InitTile();
+	InitializeObstacle();
+
+
 }
 
 void Draw()
 {
+
 	ClearBackground();
+	DrawBackground();
 	DrawGrid();
 	DrawTanks();
-	DrawBarrel();
+
+	//DrawBarrel();
 }
 
 void Update(float elapsedSec)
@@ -28,6 +37,7 @@ void Update(float elapsedSec)
 
 void End()
 {
+	EndBackground();
 	// free game resources here
 }
 #pragma endregion gameFunctions
@@ -150,15 +160,35 @@ void CalculateBarrelAngle(const Point2f& mousePosition)
 {
 	Tank& activeTank{ g_Tanks[g_TurnCounter] };
 	Rectf tankRectangle{ g_SideLength * activeTank.columnIndex, g_SideLength * activeTank.rowIndex, g_SideLength, g_SideLength };
+	
 	Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
 	float barrelAngle{/* Magic Happens Here */ };
 	activeTank.barrelAngle = barrelAngle;
 }
 
+void InitializeObstacle() 
+{
+	int nbrOfObstacles{ 20 };
+	
+	for (int i{}; i < nbrOfObstacles ; i++)
+	{ 
+			int rdmRow{rand()%(g_GridRows-2) + 1};
+			int rdmColumn{ rand() % (g_GridColumns-2) +1 };
+
+			int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
+			if (g_IsCellFree[index] == false) --i;
+			g_IsCellFree[index] = false;
+	}
+
+
+	int index{ GetLinearIndexFrom2D(5, 5, g_GridColumns) };
+	g_IsCellFree[index] = false;
+};
+
 void DrawGrid()
 {
 	const Color4f toggledOn{ 1.0f, 0.4f, 0.2f, 1.0f };
-	const Color4f togledOff{ 0.8f, 0.8f, 0.8f, 1.0f };
+	const Color4f togledOff{ 0.8f, 0.8f, 0.8f, 0.0f };
 	for (int row{ 0 }; row < g_GridRows; row++)
 	{
 		for (int column{ 0 }; column < g_GridColumns; column++)
@@ -167,7 +197,14 @@ void DrawGrid()
 			int index{ GetLinearIndexFrom2D(row, column, g_GridColumns) };
 			SetColor(togledOff);
 			if (!g_IsCellFree[index])
-				SetColor(toggledOn);
+			{
+				if (row == 0 || row == g_GridRows - 1 || column == 0 || column == g_GridColumns - 1)
+				{
+					Rectf size{ 0,128, g_SideLength, g_SideLength };
+					DrawTexture(g_Tile, bottomLeft, size);
+				}
+				else SetColor(toggledOn);
+			}
 			FillRect(bottomLeft, g_SideLength, g_SideLength);
 			SetColor(g_White);
 			DrawRect(bottomLeft, g_SideLength, g_SideLength);
@@ -194,4 +231,42 @@ int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns)
 	return rowIndex * nrOfColumns + columnIndex;
 }
 
+void InitBackground()
+{
+	bool isCreationOk{};
+	isCreationOk = TextureFromFile("Resources/Grass.png", g_Background);
+}
+void DrawBackground() 
+{
+	Point2f bottom{0,0};
+	DrawTexture(g_Background, bottom);
+};
+
+void EndBackground()
+{
+	DeleteTexture(g_Background);
+};
+
+
+void InitTile() 
+{
+	bool isCreationOk{};
+	isCreationOk = TextureFromFile("Resources/Block.png", g_Tile);
+};
+void DrawTile() 
+{
+	
+};
+void EndTile() 
+{
+	
+
+
+};
+
+Point2f GetCenterOfRectangle(const Rectf &Rect) 
+{
+	return Point2f{ 2,5 };
+	
+};
 #pragma endregion ownDefinitions
