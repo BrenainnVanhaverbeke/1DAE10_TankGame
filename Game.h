@@ -42,6 +42,8 @@ struct Tank
 	float barrelAngle;
 	Index2D tankIndex;
 	TankOrientation orientation;
+	Point2f tankCenter;
+	Point2f barrelEnd;
 };
 
 struct Obstacle
@@ -58,15 +60,20 @@ const int g_GridColumns{ (int)(g_WindowWidth / g_SideLength) };
 const int g_AmountOfGridCells{ g_GridRows * g_GridColumns };
 const int g_AmountOfPlayers{ 2 };
 const int g_NrOfObstacles{ 20 };
+const int g_ProjectileSpeed{ 1000 };
+const float g_BarrelLength{ 60.0f };
 
 const Color4f g_White{ 1.0f, 1.0f, 1.0f, 1.0f };
 const Index2D g_StartingPositions[g_AmountOfPlayers]{ Index2D{1, g_GridRows - 2}, Index2D{g_GridColumns - 2, 1} };
 
 int g_TurnCounter{ 0 };
+bool g_IsShooting{ false };
 
 Texture g_Tile{};
 Texture g_Background{};
 Point2f g_MousePosition{};
+Circlef g_Projectile{ Point2f{0.0f, 0.0f}, 3.0f };
+Vector2f g_ProjectileVector{};
 
 Tank* g_Tanks{ new Tank[g_AmountOfPlayers] };
 GridCell* g_Grid{ new GridCell[g_AmountOfGridCells] };
@@ -88,7 +95,9 @@ void InitialiseObstacles(Tank* pTanks);
 #pragma region Logic
 
 void MoveTank(TankOrientation direction);
-void CalculateBarrelAngle(const Point2f& mousePosition);
+void UpdateBarrelEnd();
+void CheckTankHit();
+void CheckObstacleHit();
 
 #pragma endregion Logic
 
@@ -99,6 +108,7 @@ void DrawGrid();
 void DrawObstacles();
 void DrawTanks();
 void DrawBarrels();
+void DrawProjectile();
 void DrawInstructions();
 //void DrawTile();
 

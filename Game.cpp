@@ -25,12 +25,21 @@ void Draw()
 	DrawGrid();
 	DrawObstacles();
 	DrawTanks();
+	if (g_IsShooting)
+		DrawProjectile();
 	//DrawInstructions();
 }
 
 void Update(float elapsedSec)
 {
-
+	UpdateBarrelEnd();
+	if (g_IsShooting)
+	{
+		g_Projectile.center.x += g_ProjectileVector.x * elapsedSec;
+		g_Projectile.center.y += g_ProjectileVector.y * elapsedSec;
+		CheckTankHit();
+		CheckObstacleHit();
+	}
 }
 
 void End()
@@ -75,7 +84,7 @@ void OnKeyUpEvent(SDL_Keycode key)
 void OnMouseMotionEvent(const SDL_MouseMotionEvent& e)
 {
 	g_MousePosition = Point2f{ (float)e.x, g_WindowHeight - (float)e.y };
-	CalculateBarrelAngle(g_MousePosition);
+	g_Tanks[g_TurnCounter].barrelAngle = GetBarrelAngle(g_Tanks[g_TurnCounter].tankCenter, g_MousePosition);
 }
 
 void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
@@ -85,7 +94,10 @@ void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 
 void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 {
-
+	Tank& activeTank{ g_Tanks[g_TurnCounter] };
+	g_IsShooting = true;
+	g_ProjectileVector = GetVectorToDirectionWithForce(g_Tanks[g_TurnCounter].barrelAngle, g_ProjectileSpeed);
+	g_Projectile.center = activeTank.barrelEnd;
 }
 #pragma endregion inputHandling
 
@@ -146,7 +158,11 @@ void InitialiseTanks()
 		Tank& tank = g_Tanks[i];
 		tank.tankIndex = g_StartingPositions[i];
 		tank.health = initialHealth;
+		tank.barrelAngle = ConvertDegreesToRadians(180.0f * i);
 		int tankLocationIndex{ GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns) };
+		GridCell& gridCell{ g_Grid[tankLocationIndex] };
+		tank.tankCenter = GetCenterOfRectangle(gridCell.cell);
+		tank.barrelEnd = GetCoordinatesFromRadians(g_BarrelLength, tank.barrelAngle, tank.tankCenter);
 		g_Grid[tankLocationIndex].isFree = false;
 	}
 }
@@ -191,23 +207,24 @@ void MoveTank(TankOrientation direction)
 	}
 	int tankLocationIndex{ GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns) };
 	int tankDestinationIndex{ GetLinearIndexFrom2D(tank.tankIndex.row + yDisplacement, tank.tankIndex.column + xDisplacement, g_GridColumns) };
-	if (g_Grid[tankDestinationIndex].isFree)
+	GridCell& gridCell{ g_Grid[tankDestinationIndex] };
+	if (gridCell.isFree)
 	{
 		tank.tankIndex.column += xDisplacement;
 		tank.tankIndex.row += yDisplacement;
 		g_Grid[tankLocationIndex].isFree = true;
-		g_Grid[tankDestinationIndex].isFree = false;
+		gridCell.isFree = false;
+		tank.tankCenter = GetCenterOfRectangle(gridCell.cell);
+		UpdateBarrelEnd();
 	}
 	g_TurnCounter = (g_TurnCounter + 1) % g_AmountOfPlayers;
 }
 
-void CalculateBarrelAngle(const Point2f& mousePosition)
+void UpdateBarrelEnd()
 {
 	Tank& activeTank{ g_Tanks[g_TurnCounter] };
-	Rectf tankRectangle{ g_SideLength * activeTank.tankIndex.column, g_SideLength * activeTank.tankIndex.row, g_SideLength, g_SideLength };
-	Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
-	float barrelAngle{ GetBarrelAngle(tankCenter, mousePosition) };
-	activeTank.barrelAngle = barrelAngle;
+	int index = GetLinearIndexFrom2D(activeTank.tankIndex, g_GridColumns);
+	activeTank.barrelEnd = GetCoordinatesFromRadians(g_BarrelLength, activeTank.barrelAngle, activeTank.tankCenter);
 }
 
 #pragma endregion Logic
@@ -262,16 +279,19 @@ void DrawTanks()
 void DrawBarrels()
 {
 	const Color4f barrelColour{ 0.0f, 0.0f, 0.0f, 1.0f };
-	const float barrelLength{ 60.0f };
 	SetColor(barrelColour);
 	for (int player = 0; player < g_AmountOfPlayers; player++)
 	{
 		Tank& tank{ g_Tanks[player] };
-		Rectf& tankRectangle{ g_Grid[GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns)].cell };
-		Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
-		Point2f barrelEnd{ GetCoordinatesFromRadians(barrelLength, tank.barrelAngle, tankCenter) };
-		DrawLine(tankCenter, barrelEnd, 3.0f);
+		DrawLine(tank.tankCenter, tank.barrelEnd, 5.0f);
 	}
+}
+
+void DrawProjectile()
+{
+	const Color4f projectileColour{ 0.7f, 0.0f, 0.0f, 1.0f };
+	SetColor(projectileColour);
+	FillCircle(g_Projectile);
 }
 
 void DrawInstructions()

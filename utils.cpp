@@ -660,6 +660,14 @@ namespace utils
 		return Point2f{ x, y };
 	}
 
+	Vector2f GetVectorToDirectionWithForce(float angle, float force)
+	{
+		Vector2f vector{};
+		vector.x = force * cosf(angle);
+		vector.y = force * sinf(angle);
+		return vector;
+	}
+
 	Color4f GetRandomColour()
 	{
 		float r{ GetRandomNumber(0, 255) / 255 };

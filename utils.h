@@ -110,6 +110,7 @@ namespace utils
 	float ConvertDegreesToRadians(float degrees);
 	float ConvertRadiansToDegrees(float radians);
 	Point2f GetCoordinatesFromRadians(float radius, float radians, Point2f offset = Point2f{ 0.0f, 0.0f });
+	Vector2f GetVectorToDirectionWithForce(float angle, float force);
 	Color4f GetRandomColour();
 	float GetRandomNumber(int lowestValue, int highestValue, bool isInclusive = true);
 	int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns);
