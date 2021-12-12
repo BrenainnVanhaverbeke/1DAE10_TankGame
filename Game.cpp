@@ -277,13 +277,15 @@ void DrawBarrels()
 void DrawInstructions()
 {
 	const int fontPoints{ 24 };
-	const int instructionLines{ 4 };
+	const int instructionLines{ 6 };
 	std::string pGameInstructions[instructionLines]
 	{
-	  "W or Up key to move tank up",
-	  "A or Left key to move tank left",
-	  "S or Down key to move tank down",
-	  "D or Right key to move tank right"
+		"W or Up key to move tank up",
+		"A or Left key to move tank left",
+		"S or Down key to move tank down",
+		"D or Right key to move tank right"
+		"Click to shoot in the direction of the mouse pointer.",
+		"The game is turn based, you can either move or shoot."
 	};
 	for (int i{ 0 }; i < instructionLines; ++i)
 	{
