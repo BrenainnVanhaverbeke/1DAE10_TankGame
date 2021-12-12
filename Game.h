@@ -65,7 +65,9 @@ void MoveTank(TankOrientation direction);
 void DrawGrid();
 void DrawTanks();
 void CalculateBarrelAngle(const Point2f& mousePosition);
-void InitializeObstacle();
+void InitializeObstacle(Tank g_Tanks[]);
+Point2f GetCenterOfRectangle();
+
 
 int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns);
 
