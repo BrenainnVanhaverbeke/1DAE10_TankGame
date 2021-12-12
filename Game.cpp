@@ -26,8 +26,7 @@ void Draw()
 	DrawBackground();
 	DrawGrid();
 	DrawTanks();
-
-	//DrawBarrel();
+	DrawInstructions();
 }
 
 void Update(float elapsedSec)
@@ -175,43 +174,31 @@ void CalculateBarrelAngle(const Point2f& mousePosition)
 {
 	Tank& activeTank{ g_Tanks[g_TurnCounter] };
 	Rectf tankRectangle{ g_SideLength * activeTank.columnIndex, g_SideLength * activeTank.rowIndex, g_SideLength, g_SideLength };
-
 	Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
 	float barrelAngle{ GetBarrelAngle(tankCenter, mousePosition) };
 	activeTank.barrelAngle = barrelAngle;
 }
 
-void InitializeObstacle(Tank* g_Tanks)
+void InitializeObstacle(Tank* pTanks)
 {
 	int nbrOfObstacles{ 20 };
-
-
 	for (int i{}; i < nbrOfObstacles; ++i)
 	{
 		int rdmRow{ rand() % (g_GridRows - 2) + 1 };
 		int rdmColumn{ rand() % (g_GridColumns - 2) + 1 };
 		int rdmIndex{ GetLinearIndexFrom2D(rdmRow, rdmColumn, 16) };
-
-
-		int tankIndex =GetLinearIndexFrom2D(1, 14, 16);
-
-		if ((tankIndex+1 == rdmIndex) || tankIndex-1 == rdmIndex ||tankIndex+g_GridColumns-1 == rdmIndex|| tankIndex + g_GridColumns + 1== rdmIndex)
+		int tankIndex = GetLinearIndexFrom2D(1, 14, 16);
+		if ((tankIndex + 1 == rdmIndex) || tankIndex - 1 == rdmIndex || tankIndex + g_GridColumns - 1 == rdmIndex || tankIndex + g_GridColumns + 1 == rdmIndex)
 		{
 			--i;
-
 		}
 		else
 		{
-
-		}
-		{
 			int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
 			if (g_IsCellFree[index] == false) --i;
-			g_IsCellFree[index] = false;	
-
+			g_IsCellFree[index] = false;
 		}
-
-	};
+	}
 }
 
 void DrawGrid()
@@ -279,11 +266,30 @@ void EndBackground()
 	DeleteTexture(g_Background);
 }
 
-
-
 void EndTile()
 {
 	DeleteTexture(g_Tile);
+}
+
+void DrawInstructions()
+{
+	const int fontPoints{ 24 };
+	const int instructionLines{ 4 };
+	std::string pGameInstructions[instructionLines]
+	{
+	  "W or Up key to move tank up",
+	  "A or Left key to move tank left",
+	  "S or Down key to move tank down",
+	  "D or Right key to move tank right"
+	};
+	for (int i{ 0 }; i < instructionLines; ++i)
+	{
+		Texture textTexture{};
+		bool successful{ TextureFromString(pGameInstructions[i], "Resources/DIN-Light.otf", fontPoints, Color4f{ 1.0f, 1.0f, 1.0f, 1.0f }, textTexture) };
+		if (successful)
+			DrawTexture(textTexture, Point2f{ 0.0f, g_WindowHeight - (textTexture.height * (i + 1)) });
+		DeleteTexture(textTexture);
+	}
 }
 
 #pragma endregion ownDefinitions
