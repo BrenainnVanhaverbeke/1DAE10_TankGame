@@ -12,16 +12,13 @@ void Start()
 {
 	InitialiseBorder();
 	InitialiseTanks();
-	InitBackground();
-	InitTile();
-	InitializeObstacle(g_Tanks);
-
-
+	InitialiseBackground();
+	InitialiseTiles();
+	InitialiseObstacles(g_Tanks);
 }
 
 void Draw()
 {
-
 	ClearBackground();
 	DrawBackground();
 	DrawGrid();
@@ -38,16 +35,16 @@ void End()
 {
 	EndBackground();
 	EndTile();
-	// free game resources here
+	delete[] g_IsCellFree;
+	g_IsCellFree = nullptr;
+	delete[] g_Tanks;
+	g_Tanks = nullptr;
 }
 #pragma endregion gameFunctions
 
 //Keyboard and mouse input handling
 #pragma region inputHandling											
-void OnKeyDownEvent(SDL_Keycode key)
-{
-
-}
+void OnKeyDownEvent(SDL_Keycode key){}
 
 void OnKeyUpEvent(SDL_Keycode key)
 {
@@ -92,14 +89,14 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 #pragma region ownDefinitions
 // Define your own functions here
 
-void InitBackground()
+void InitialiseBackground()
 {
 	bool isCreationOk{ TextureFromFile("Resources/Grass.png", g_Background) };
 	if (!isCreationOk)
 		std::cout << "Error loading Grass.png" << std::endl;
 }
 
-void InitTile()
+void InitialiseTiles()
 {
 	bool isCreationOk{ TextureFromFile("Resources/Block.png", g_Tile) };
 	if (!isCreationOk)
@@ -125,16 +122,14 @@ void InitialiseTanks()
 {
 	const int initialHealth{ 3 };
 	Tank& tank = g_Tanks[0];
-	tank.columnIndex = 1;
-	tank.rowIndex = g_GridRows - 2;
+	tank.index = g_StartingPositions[0];
 	tank.health = initialHealth;
-	int tankLocationIndex{ GetLinearIndexFrom2D(tank.rowIndex, tank.columnIndex, g_GridColumns) };
+	int tankLocationIndex{ GetLinearIndexFrom2D(tank.index.row, tank.index.column, g_GridColumns) };
 	g_IsCellFree[tankLocationIndex] = false;
 	Tank& tank2 = g_Tanks[1];
-	tank2.columnIndex = g_GridColumns - 2;
-	tank2.rowIndex = 1;
+	tank.index = g_StartingPositions[1];
 	tank2.health = initialHealth;
-	int tank2LocationIndex{ GetLinearIndexFrom2D(tank2.rowIndex, tank2.columnIndex, g_GridColumns) };
+	int tank2LocationIndex{ GetLinearIndexFrom2D(tank2.index.row, tank2.index.column, g_GridColumns) };
 	g_IsCellFree[tank2LocationIndex] = false;
 }
 
@@ -158,12 +153,12 @@ void MoveTank(TankOrientation direction)
 		xDisplacement = 1;
 		break;
 	}
-	int tankLocationIndex{ GetLinearIndexFrom2D(tank.rowIndex, tank.columnIndex, g_GridColumns) };
-	int tankDestinationIndex{ GetLinearIndexFrom2D(tank.rowIndex + yDisplacement, tank.columnIndex + xDisplacement, g_GridColumns) };
+	int tankLocationIndex{ GetLinearIndexFrom2D(tank.index.row, tank.index.column, g_GridColumns) };
+	int tankDestinationIndex{ GetLinearIndexFrom2D(tank.index.row + yDisplacement, tank.index.column + xDisplacement, g_GridColumns) };
 	if (g_IsCellFree[tankDestinationIndex])
 	{
-		tank.columnIndex += xDisplacement;
-		tank.rowIndex += yDisplacement;
+		tank.index.column += xDisplacement;
+		tank.index.row += yDisplacement;
 		g_IsCellFree[tankLocationIndex] = true;
 		g_IsCellFree[tankDestinationIndex] = false;
 	}
@@ -173,13 +168,13 @@ void MoveTank(TankOrientation direction)
 void CalculateBarrelAngle(const Point2f& mousePosition)
 {
 	Tank& activeTank{ g_Tanks[g_TurnCounter] };
-	Rectf tankRectangle{ g_SideLength * activeTank.columnIndex, g_SideLength * activeTank.rowIndex, g_SideLength, g_SideLength };
+	Rectf tankRectangle{ g_SideLength * activeTank.index.column, g_SideLength * activeTank.index.row, g_SideLength, g_SideLength };
 	Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
 	float barrelAngle{ GetBarrelAngle(tankCenter, mousePosition) };
 	activeTank.barrelAngle = barrelAngle;
 }
 
-void InitializeObstacle(Tank* pTanks)
+void InitialiseObstacles(Tank* pTanks)
 {
 	int nbrOfObstacles{ 20 };
 	for (int i{}; i < nbrOfObstacles; ++i)
@@ -237,8 +232,8 @@ void DrawTanks()
 	for (int player = 0; player < g_AmountOfPlayers; player++)
 	{
 		Tank& tank{ g_Tanks[player] };
-		tankDestination.left = tank.columnIndex * g_SideLength;
-		tankDestination.bottom = tank.rowIndex * g_SideLength;
+		tankDestination.left = tank.index.column * g_SideLength;
+		tankDestination.bottom = tank.index.row * g_SideLength;
 		SetColor(tankColour);
 		FillRect(tankDestination);
 		Point2f tankCenter{ GetCenterOfRectangle(tankDestination) };
