@@ -15,7 +15,7 @@ void Start()
 	InitialiseTanks();
 	InitialiseBackground();
 	InitialiseTiles();
-	InitialiseObstacles(g_Tanks);
+	//InitialiseObstacles(g_Tanks);
 }
 
 void Draw()
@@ -36,19 +36,17 @@ void End()
 {
 	EndBackground();
 	EndTile();
-	delete[] g_IsCellFree;
 	delete[] g_Tanks;
-	//delete[] g_Grid;
-	g_IsCellFree = nullptr;
+	delete[] g_Grid;
 	g_Tanks = nullptr;
-	//g_Grid = nullptr;
+	g_Grid = nullptr;
 }
 
 #pragma endregion gameFunctions
 
 //Keyboard and mouse input handling
 #pragma region inputHandling											
-void OnKeyDownEvent(SDL_Keycode key){}
+void OnKeyDownEvent(SDL_Keycode key) {}
 
 void OnKeyUpEvent(SDL_Keycode key)
 {
@@ -93,6 +91,8 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 #pragma region ownDefinitions
 // Define your own functions here
 
+#pragma region Initialisers
+
 void InitialiseBackground()
 {
 	bool isCreationOk{ TextureFromFile("Resources/Grass.png", g_Background) };
@@ -115,9 +115,9 @@ void InitialiseGrid()
 		{
 			Rectf cell{ g_SideLength * column, g_SideLength * row, g_SideLength, g_SideLength };
 			Index2D index{ column, row };
-			bool isOccupied{ false };
+			bool isFree{ true };
 			int linearIndex{ GetLinearIndexFrom2D(index, g_GridColumns) };
-			g_Grid[linearIndex] = GridCell{ isOccupied, index, cell };
+			g_Grid[linearIndex] = GridCell{ isFree, index, cell };
 		}
 	}
 }
@@ -131,7 +131,7 @@ void InitialiseBorder()
 			if (row == 0 || row == g_GridRows - 1 || column == 0 || column == g_GridColumns - 1)
 			{
 				int index{ GetLinearIndexFrom2D(row, column, g_GridColumns) };
-				g_IsCellFree[index] = false;
+				g_Grid[index].isFree = false;
 			}
 		}
 	}
@@ -146,9 +146,35 @@ void InitialiseTanks()
 		tank.tankIndex = g_StartingPositions[i];
 		tank.health = initialHealth;
 		int tankLocationIndex{ GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns) };
-		g_IsCellFree[tankLocationIndex] = false;
+		g_Grid[tankLocationIndex].isFree = false;
 	}
 }
+
+void InitialiseObstacles(Tank* pTanks)
+{
+	int nbrOfObstacles{ 20 };
+	for (int i{}; i < nbrOfObstacles; ++i)
+	{
+		int rdmRow{ rand() % (g_GridRows - 2) + 1 };
+		int rdmColumn{ rand() % (g_GridColumns - 2) + 1 };
+		int rdmIndex{ GetLinearIndexFrom2D(rdmRow, rdmColumn, 16) };
+		int tankIndex = GetLinearIndexFrom2D(1, 14, 16);
+		if ((tankIndex + 1 == rdmIndex) || tankIndex - 1 == rdmIndex || tankIndex + g_GridColumns - 1 == rdmIndex || tankIndex + g_GridColumns + 1 == rdmIndex)
+		{
+			--i;
+		}
+		else
+		{
+			int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
+			if (g_Grid[index].isFree == false) --i;
+			g_Grid[index].isFree = false;
+		}
+	}
+}
+
+#pragma endregion Initialisers
+
+#pragma region Logic
 
 void MoveTank(TankOrientation direction)
 {
@@ -172,12 +198,12 @@ void MoveTank(TankOrientation direction)
 	}
 	int tankLocationIndex{ GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns) };
 	int tankDestinationIndex{ GetLinearIndexFrom2D(tank.tankIndex.row + yDisplacement, tank.tankIndex.column + xDisplacement, g_GridColumns) };
-	if (g_IsCellFree[tankDestinationIndex])
+	if (g_Grid[tankDestinationIndex].isFree)
 	{
 		tank.tankIndex.column += xDisplacement;
 		tank.tankIndex.row += yDisplacement;
-		g_IsCellFree[tankLocationIndex] = true;
-		g_IsCellFree[tankDestinationIndex] = false;
+		g_Grid[tankLocationIndex].isFree = true;
+		g_Grid[tankDestinationIndex].isFree = false;
 	}
 	g_TurnCounter = (g_TurnCounter + 1) % g_AmountOfPlayers;
 }
@@ -191,74 +217,9 @@ void CalculateBarrelAngle(const Point2f& mousePosition)
 	activeTank.barrelAngle = barrelAngle;
 }
 
-void InitialiseObstacles(Tank* pTanks)
-{
-	int nbrOfObstacles{ 20 };
-	for (int i{}; i < nbrOfObstacles; ++i)
-	{
-		int rdmRow{ rand() % (g_GridRows - 2) + 1 };
-		int rdmColumn{ rand() % (g_GridColumns - 2) + 1 };
-		int rdmIndex{ GetLinearIndexFrom2D(rdmRow, rdmColumn, 16) };
-		int tankIndex = GetLinearIndexFrom2D(1, 14, 16);
-		if ((tankIndex + 1 == rdmIndex) || tankIndex - 1 == rdmIndex || tankIndex + g_GridColumns - 1 == rdmIndex || tankIndex + g_GridColumns + 1 == rdmIndex)
-		{
-			--i;
-		}
-		else
-		{
-			int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
-			if (g_IsCellFree[index] == false) --i;
-			g_IsCellFree[index] = false;
-		}
-	}
-}
+#pragma endregion Logic
 
-void DrawGrid()
-{
-	const Color4f toggledOn{ 1.0f, 0.4f, 0.2f, 1.0f };
-	const Color4f togledOff{ 0.8f, 0.8f, 0.8f, 0.0f };
-	for (int row{ 0 }; row < g_GridRows; row++)
-	{
-		for (int column{ 0 }; column < g_GridColumns; column++)
-		{
-			Point2f bottomLeft{ g_SideLength * column, g_SideLength * row };
-			int index{ GetLinearIndexFrom2D(row, column, g_GridColumns) };
-			SetColor(togledOff);
-			if (!g_IsCellFree[index])
-			{
-				if (row == 0 || row == g_GridRows - 1 || column == 0 || column == g_GridColumns - 1)
-				{
-					Rectf size{ 0,128, g_SideLength, g_SideLength };
-					DrawTexture(g_Tile, bottomLeft, size);
-				}
-				else SetColor(toggledOn);
-			}
-			FillRect(bottomLeft, g_SideLength, g_SideLength);
-			SetColor(g_White);
-			DrawRect(bottomLeft, g_SideLength, g_SideLength);
-		}
-	}
-}
-
-void DrawTanks()
-{
-	const Color4f tankColour{ 0.0f, 0.75f, 0.0f, 1.0f };
-	const Color4f barrelColour{ 0.0f, 0.0f, 0.0f, 1.0f };
-	const float barrelLength{ 60.0f };
-	Rectf tankDestination{ 0, 0, g_SideLength, g_SideLength };
-	for (int player = 0; player < g_AmountOfPlayers; player++)
-	{
-		Tank& tank{ g_Tanks[player] };
-		tankDestination.left = tank.tankIndex.column * g_SideLength;
-		tankDestination.bottom = tank.tankIndex.row * g_SideLength;
-		SetColor(tankColour);
-		FillRect(tankDestination);
-		Point2f tankCenter{ GetCenterOfRectangle(tankDestination) };
-		Point2f barrelEnd{ GetCoordinatesFromRadians(barrelLength, tank.barrelAngle, tankCenter) };
-		SetColor(barrelColour);
-		DrawLine(tankCenter, barrelEnd, 3.0f);
-	}
-}
+#pragma region DrawFunctions
 
 void DrawBackground()
 {
@@ -266,14 +227,47 @@ void DrawBackground()
 	DrawTexture(g_Background, bottom);
 }
 
-void EndBackground()
+void DrawGrid()
 {
-	DeleteTexture(g_Background);
+	for (int i = 0; i < g_AmountOfGridCells; i++)
+	{
+		const GridCell& gridCell{ g_Grid[i] };
+		SetColor(g_White);
+		DrawRect(gridCell.cell);
+		if (gridCell.index.column == 0 || gridCell.index.column == g_GridColumns - 1
+			|| gridCell.index.row == 0 || gridCell.index.row == g_GridRows - 1)
+		{
+			DrawTexture(g_Tile, gridCell.cell);
+		}
+	}
 }
 
-void EndTile()
+void DrawTanks()
 {
-	DeleteTexture(g_Tile);
+	const Color4f tankColour{ 0.0f, 0.75f, 0.0f, 1.0f };
+	SetColor(tankColour);
+	for (int player = 0; player < g_AmountOfPlayers; player++)
+	{
+		Tank& tank{ g_Tanks[player] };
+		Rectf& tankRectangle{ g_Grid[GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns)].cell };
+		FillRect(tankRectangle);
+	}
+	DrawBarrels();
+}
+
+void DrawBarrels()
+{
+	const Color4f barrelColour{ 0.0f, 0.0f, 0.0f, 1.0f };
+	const float barrelLength{ 60.0f };
+	SetColor(barrelColour);
+	for (int player = 0; player < g_AmountOfPlayers; player++)
+	{
+		Tank& tank{ g_Tanks[player] };
+		Rectf& tankRectangle{ g_Grid[GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns)].cell };
+		Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
+		Point2f barrelEnd{ GetCoordinatesFromRadians(barrelLength, tank.barrelAngle, tankCenter) };
+		DrawLine(tankCenter, barrelEnd, 3.0f);
+	}
 }
 
 void DrawInstructions()
@@ -296,5 +290,21 @@ void DrawInstructions()
 		DeleteTexture(textTexture);
 	}
 }
+
+#pragma endregion DrawFunctions
+
+#pragma region CleanupFunctions
+
+void EndBackground()
+{
+	DeleteTexture(g_Background);
+}
+
+void EndTile()
+{
+	DeleteTexture(g_Tile);
+}
+
+#pragma endregion CleanupFunctions
 
 #pragma endregion ownDefinitions

@@ -36,7 +36,7 @@ struct Tank
 
 struct GridCell
 {
-	bool isOccupied;
+	bool isFree;
 	Index2D index;
 	Rectf cell;
 };
@@ -58,7 +58,7 @@ Texture g_Tile{};
 Texture g_Background{};
 Point2f g_MousePosition{};
 
-bool* g_IsCellFree{ new bool[g_AmountOfGridCells] };
+//bool* g_IsCellFree{ new bool[g_AmountOfGridCells] };
 Tank* g_Tanks{ new Tank[g_AmountOfPlayers] };
 GridCell* g_Grid{ new GridCell[g_AmountOfGridCells] };
 
@@ -87,6 +87,7 @@ void CalculateBarrelAngle(const Point2f& mousePosition);
 void DrawBackground();
 void DrawGrid();
 void DrawTanks();
+void DrawBarrels();
 void DrawInstructions();
 //void DrawTile();
 
