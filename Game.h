@@ -1,3 +1,6 @@
+// Vanhaverbeke, Brenainn - 1DAE10
+// Duterte, Tom - 1DAE11
+
 #pragma once
 using namespace utils;
 #pragma region gameInformation
@@ -26,6 +29,13 @@ enum class TankOrientation
 
 #pragma region Structs
 
+struct GridCell
+{
+	bool isFree;
+	Index2D index;
+	Rectf cell;
+};
+
 struct Tank
 {
 	int health;
@@ -34,11 +44,10 @@ struct Tank
 	TankOrientation orientation;
 };
 
-struct GridCell
+struct Obstacle
 {
-	bool isFree;
-	Index2D index;
-	Rectf cell;
+	int health;
+	Index2D obstacleIndex;
 };
 
 #pragma endregion Structs
@@ -48,6 +57,7 @@ const int g_GridRows{ (int)(g_WindowHeight / g_SideLength) };
 const int g_GridColumns{ (int)(g_WindowWidth / g_SideLength) };
 const int g_AmountOfGridCells{ g_GridRows * g_GridColumns };
 const int g_AmountOfPlayers{ 2 };
+const int g_NrOfObstacles{ 20 };
 
 const Color4f g_White{ 1.0f, 1.0f, 1.0f, 1.0f };
 const Index2D g_StartingPositions[g_AmountOfPlayers]{ Index2D{1, g_GridRows - 2}, Index2D{g_GridColumns - 2, 1} };
@@ -58,9 +68,9 @@ Texture g_Tile{};
 Texture g_Background{};
 Point2f g_MousePosition{};
 
-//bool* g_IsCellFree{ new bool[g_AmountOfGridCells] };
 Tank* g_Tanks{ new Tank[g_AmountOfPlayers] };
 GridCell* g_Grid{ new GridCell[g_AmountOfGridCells] };
+Obstacle* g_pObstacles{ nullptr };
 
 // Declare your own functions here
 
@@ -86,6 +96,7 @@ void CalculateBarrelAngle(const Point2f& mousePosition);
 
 void DrawBackground();
 void DrawGrid();
+void DrawObstacles();
 void DrawTanks();
 void DrawBarrels();
 void DrawInstructions();

@@ -15,7 +15,7 @@ void Start()
 	InitialiseTanks();
 	InitialiseBackground();
 	InitialiseTiles();
-	//InitialiseObstacles(g_Tanks);
+	InitialiseObstacles(g_Tanks);
 }
 
 void Draw()
@@ -23,8 +23,9 @@ void Draw()
 	ClearBackground();
 	DrawBackground();
 	DrawGrid();
+	DrawObstacles();
 	DrawTanks();
-	DrawInstructions();
+	//DrawInstructions();
 }
 
 void Update(float elapsedSec)
@@ -152,23 +153,15 @@ void InitialiseTanks()
 
 void InitialiseObstacles(Tank* pTanks)
 {
-	int nbrOfObstacles{ 20 };
-	for (int i{}; i < nbrOfObstacles; ++i)
+	int initialHealth{ 1 };
+	g_pObstacles = new Obstacle[g_NrOfObstacles];
+	for (int i = 0; i < g_NrOfObstacles; i++)
 	{
-		int rdmRow{ rand() % (g_GridRows - 2) + 1 };
-		int rdmColumn{ rand() % (g_GridColumns - 2) + 1 };
-		int rdmIndex{ GetLinearIndexFrom2D(rdmRow, rdmColumn, 16) };
-		int tankIndex = GetLinearIndexFrom2D(1, 14, 16);
-		if ((tankIndex + 1 == rdmIndex) || tankIndex - 1 == rdmIndex || tankIndex + g_GridColumns - 1 == rdmIndex || tankIndex + g_GridColumns + 1 == rdmIndex)
-		{
-			--i;
-		}
-		else
-		{
-			int index{ GetLinearIndexFrom2D(rdmRow, rdmColumn, g_GridColumns) };
-			if (g_Grid[index].isFree == false) --i;
-			g_Grid[index].isFree = false;
-		}
+		int randomRow{ (int)GetRandomNumber(1, g_GridRows - 2) };
+		int randomColumn{ (int)GetRandomNumber(1, g_GridColumns - 2) };
+		int linearIndex{ GetLinearIndexFrom2D(randomRow, randomColumn, g_GridColumns) };
+		g_Grid[linearIndex].isFree = false;
+		g_pObstacles[i] = Obstacle{ initialHealth, Index2D{randomColumn, randomRow} };
 	}
 }
 
@@ -239,6 +232,17 @@ void DrawGrid()
 		{
 			DrawTexture(g_Tile, gridCell.cell);
 		}
+	}
+}
+
+void DrawObstacles()
+{
+	for (int i = 0; i < g_NrOfObstacles; i++)
+	{
+		Obstacle& obstacle{ g_pObstacles[i] };
+		GridCell& obstacleCell{ g_Grid[GetLinearIndexFrom2D(obstacle.obstacleIndex, g_GridColumns)] };
+		SetColor(0.0f, 0.0f, 0.0f);
+		FillRect(obstacleCell.cell);
 	}
 }
 
