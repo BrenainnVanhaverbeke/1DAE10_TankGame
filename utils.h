@@ -112,6 +112,8 @@ namespace utils
 	Point2f GetCoordinatesFromRadians(float radius, float radians, Point2f offset = Point2f{ 0.0f, 0.0f });
 	Color4f GetRandomColour();
 	float GetRandomNumber(int lowestValue, int highestValue, bool isInclusive = true);
+	int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns);
+	int GetLinearIndexFrom2D(Index2D index, int nrOfColumns);
 
 #pragma endregion GeneralUtils
 

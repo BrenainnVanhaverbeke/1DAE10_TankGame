@@ -676,6 +676,16 @@ namespace utils
 		return (float)(rand() % amountOfValues) + lowestValue;
 	}
 
+	int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns)
+	{
+		return rowIndex * nrOfColumns + columnIndex;
+	}
+
+	int GetLinearIndexFrom2D(Index2D index, int nrOfColumns)
+	{
+		return GetLinearIndexFrom2D(index.row, index.column, nrOfColumns);
+	}
+
 #pragma endregion GeneralUtils
 
 #pragma region GameSpecificUtils

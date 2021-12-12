@@ -30,9 +30,7 @@ struct Tank
 {
 	int health;
 	float barrelAngle;
-	//int rowIndex;
-	//int columnIndex;
-	Index2D index;
+	Index2D tankIndex;
 	TankOrientation orientation;
 };
 
@@ -41,12 +39,6 @@ struct GridCell
 	bool isOccupied;
 	Index2D index;
 	Rectf cell;
-};
-
-struct Index2D
-{
-	int row;
-	int column;
 };
 
 #pragma endregion Structs
@@ -58,7 +50,7 @@ const int g_AmountOfGridCells{ g_GridRows * g_GridColumns };
 const int g_AmountOfPlayers{ 2 };
 
 const Color4f g_White{ 1.0f, 1.0f, 1.0f, 1.0f };
-const Index2D g_StartingPositions[g_AmountOfPlayers]{ Index2D{1, g_GridColumns - 2}, Index2D{g_GridColumns - 2, 1} };
+const Index2D g_StartingPositions[g_AmountOfPlayers]{ Index2D{1, g_GridRows - 2}, Index2D{g_GridColumns - 2, 1} };
 
 int g_TurnCounter{ 0 };
 
@@ -74,6 +66,7 @@ GridCell* g_Grid{ new GridCell[g_AmountOfGridCells] };
 
 #pragma region Initialisers
 
+void InitialiseGrid();
 void InitialiseBorder();
 void InitialiseTanks();
 void InitialiseBackground();
@@ -86,7 +79,6 @@ void InitialiseObstacles(Tank* pTanks);
 
 void MoveTank(TankOrientation direction);
 void CalculateBarrelAngle(const Point2f& mousePosition);
-int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns);
 
 #pragma endregion Logic
 
@@ -96,7 +88,7 @@ void DrawBackground();
 void DrawGrid();
 void DrawTanks();
 void DrawInstructions();
-void DrawTile();
+//void DrawTile();
 
 #pragma endregion DrawFunctions
 

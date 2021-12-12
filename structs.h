@@ -74,3 +74,9 @@ struct Vector2f
 	float x;
 	float y;
 };
+
+struct Index2D
+{
+	int column;
+	int row;
+};

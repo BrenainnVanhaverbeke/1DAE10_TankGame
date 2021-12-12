@@ -10,6 +10,7 @@
 
 void Start()
 {
+	InitialiseGrid();
 	InitialiseBorder();
 	InitialiseTanks();
 	InitialiseBackground();
@@ -36,10 +37,13 @@ void End()
 	EndBackground();
 	EndTile();
 	delete[] g_IsCellFree;
-	g_IsCellFree = nullptr;
 	delete[] g_Tanks;
+	//delete[] g_Grid;
+	g_IsCellFree = nullptr;
 	g_Tanks = nullptr;
+	//g_Grid = nullptr;
 }
+
 #pragma endregion gameFunctions
 
 //Keyboard and mouse input handling
@@ -103,6 +107,21 @@ void InitialiseTiles()
 		std::cout << "Error loading texture Block.png" << std::endl;
 }
 
+void InitialiseGrid()
+{
+	for (int row = 0; row < g_GridRows; row++)
+	{
+		for (int column = 0; column < g_GridColumns; column++)
+		{
+			Rectf cell{ g_SideLength * column, g_SideLength * row, g_SideLength, g_SideLength };
+			Index2D index{ column, row };
+			bool isOccupied{ false };
+			int linearIndex{ GetLinearIndexFrom2D(index, g_GridColumns) };
+			g_Grid[linearIndex] = GridCell{ isOccupied, index, cell };
+		}
+	}
+}
+
 void InitialiseBorder()
 {
 	for (int row{ 0 }; row < g_GridRows; row++)
@@ -121,16 +140,14 @@ void InitialiseBorder()
 void InitialiseTanks()
 {
 	const int initialHealth{ 3 };
-	Tank& tank = g_Tanks[0];
-	tank.index = g_StartingPositions[0];
-	tank.health = initialHealth;
-	int tankLocationIndex{ GetLinearIndexFrom2D(tank.index.row, tank.index.column, g_GridColumns) };
-	g_IsCellFree[tankLocationIndex] = false;
-	Tank& tank2 = g_Tanks[1];
-	tank.index = g_StartingPositions[1];
-	tank2.health = initialHealth;
-	int tank2LocationIndex{ GetLinearIndexFrom2D(tank2.index.row, tank2.index.column, g_GridColumns) };
-	g_IsCellFree[tank2LocationIndex] = false;
+	for (int i = 0; i < g_AmountOfPlayers; i++)
+	{
+		Tank& tank = g_Tanks[i];
+		tank.tankIndex = g_StartingPositions[i];
+		tank.health = initialHealth;
+		int tankLocationIndex{ GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns) };
+		g_IsCellFree[tankLocationIndex] = false;
+	}
 }
 
 void MoveTank(TankOrientation direction)
@@ -153,12 +170,12 @@ void MoveTank(TankOrientation direction)
 		xDisplacement = 1;
 		break;
 	}
-	int tankLocationIndex{ GetLinearIndexFrom2D(tank.index.row, tank.index.column, g_GridColumns) };
-	int tankDestinationIndex{ GetLinearIndexFrom2D(tank.index.row + yDisplacement, tank.index.column + xDisplacement, g_GridColumns) };
+	int tankLocationIndex{ GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns) };
+	int tankDestinationIndex{ GetLinearIndexFrom2D(tank.tankIndex.row + yDisplacement, tank.tankIndex.column + xDisplacement, g_GridColumns) };
 	if (g_IsCellFree[tankDestinationIndex])
 	{
-		tank.index.column += xDisplacement;
-		tank.index.row += yDisplacement;
+		tank.tankIndex.column += xDisplacement;
+		tank.tankIndex.row += yDisplacement;
 		g_IsCellFree[tankLocationIndex] = true;
 		g_IsCellFree[tankDestinationIndex] = false;
 	}
@@ -168,7 +185,7 @@ void MoveTank(TankOrientation direction)
 void CalculateBarrelAngle(const Point2f& mousePosition)
 {
 	Tank& activeTank{ g_Tanks[g_TurnCounter] };
-	Rectf tankRectangle{ g_SideLength * activeTank.index.column, g_SideLength * activeTank.index.row, g_SideLength, g_SideLength };
+	Rectf tankRectangle{ g_SideLength * activeTank.tankIndex.column, g_SideLength * activeTank.tankIndex.row, g_SideLength, g_SideLength };
 	Point2f tankCenter{ GetCenterOfRectangle(tankRectangle) };
 	float barrelAngle{ GetBarrelAngle(tankCenter, mousePosition) };
 	activeTank.barrelAngle = barrelAngle;
@@ -232,8 +249,8 @@ void DrawTanks()
 	for (int player = 0; player < g_AmountOfPlayers; player++)
 	{
 		Tank& tank{ g_Tanks[player] };
-		tankDestination.left = tank.index.column * g_SideLength;
-		tankDestination.bottom = tank.index.row * g_SideLength;
+		tankDestination.left = tank.tankIndex.column * g_SideLength;
+		tankDestination.bottom = tank.tankIndex.row * g_SideLength;
 		SetColor(tankColour);
 		FillRect(tankDestination);
 		Point2f tankCenter{ GetCenterOfRectangle(tankDestination) };
@@ -242,13 +259,6 @@ void DrawTanks()
 		DrawLine(tankCenter, barrelEnd, 3.0f);
 	}
 }
-
-int GetLinearIndexFrom2D(int rowIndex, int columnIndex, int nrOfColumns)
-{
-	return rowIndex * nrOfColumns + columnIndex;
-}
-
-
 
 void DrawBackground()
 {
