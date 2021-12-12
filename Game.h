@@ -60,7 +60,7 @@ const int g_GridColumns{ (int)(g_WindowWidth / g_SideLength) };
 const int g_AmountOfGridCells{ g_GridRows * g_GridColumns };
 const int g_AmountOfPlayers{ 2 };
 const int g_NrOfObstacles{ 20 };
-const int g_ProjectileSpeed{ 1000 };
+const int g_ProjectileSpeed{ 750 };
 const float g_BarrelLength{ 60.0f };
 
 const Color4f g_White{ 1.0f, 1.0f, 1.0f, 1.0f };
@@ -68,6 +68,7 @@ const Index2D g_StartingPositions[g_AmountOfPlayers]{ Index2D{1, g_GridRows - 2}
 
 int g_TurnCounter{ 0 };
 bool g_IsShooting{ false };
+bool g_IsGameOver{ false };
 
 Texture g_Tile{};
 Texture g_Background{};
@@ -96,8 +97,11 @@ void InitialiseObstacles(Tank* pTanks);
 
 void MoveTank(TankOrientation direction);
 void UpdateBarrelEnd();
-void CheckTankHit();
-void CheckObstacleHit();
+void UpdateProjectile(float elapsedSec);
+int CheckTankHit();
+int CheckObstacleHit();
+void ResolveTankHit(int tankIndex);
+void ResolveObstacleHit(int obstacleIndex);
 
 #pragma endregion Logic
 

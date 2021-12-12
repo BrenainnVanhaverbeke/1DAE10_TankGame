@@ -33,13 +33,7 @@ void Draw()
 void Update(float elapsedSec)
 {
 	UpdateBarrelEnd();
-	if (g_IsShooting)
-	{
-		g_Projectile.center.x += g_ProjectileVector.x * elapsedSec;
-		g_Projectile.center.y += g_ProjectileVector.y * elapsedSec;
-		CheckTankHit();
-		CheckObstacleHit();
-	}
+	UpdateProjectile(elapsedSec);
 }
 
 void End()
@@ -227,6 +221,66 @@ void UpdateBarrelEnd()
 	activeTank.barrelEnd = GetCoordinatesFromRadians(g_BarrelLength, activeTank.barrelAngle, activeTank.tankCenter);
 }
 
+void UpdateProjectile(float elapsedSec)
+{
+	if (g_IsShooting)
+	{
+		g_Projectile.center.x += g_ProjectileVector.x * elapsedSec;
+		g_Projectile.center.y += g_ProjectileVector.y * elapsedSec;
+		int tankIndex{ CheckTankHit() };
+		if (-1 < tankIndex)
+		{
+			ResolveTankHit(tankIndex);
+			return;
+		}
+		int obstacleIndex{ CheckObstacleHit() };
+		if (-1 < obstacleIndex)
+			ResolveObstacleHit(obstacleIndex);
+	}
+}
+
+int CheckTankHit()
+{
+	for (int tankIndex{ 0 }; tankIndex < g_AmountOfPlayers; ++tankIndex)
+	{
+		Tank& tank{ g_Tanks[tankIndex] };
+		int gridCellIndex{ GetLinearIndexFrom2D(tank.tankIndex, g_GridColumns) };
+		GridCell gridCell{ g_Grid[gridCellIndex] };
+		if (IsIntersecting(g_Projectile, gridCell.cell) && 0 < tank.health)
+			return tankIndex;
+	}
+	return -1;
+}
+
+int CheckObstacleHit()
+{
+	for (int obstacleIndex{ 0 }; obstacleIndex < g_NrOfObstacles; obstacleIndex++)
+	{
+		Obstacle& obstacle{ g_pObstacles[obstacleIndex] };
+		int index{ GetLinearIndexFrom2D(obstacle.obstacleIndex, g_GridColumns) };
+		GridCell& gridCell{ g_Grid[index] };
+		if (IsIntersecting(g_Projectile, gridCell.cell) && 0 < obstacle.health)
+			return obstacleIndex;
+	}
+	return -1;
+}
+
+void ResolveTankHit(int tankIndex)
+{
+	Tank& tank{ g_Tanks[tankIndex] };
+	tank.health--;
+	g_IsShooting = false;
+	if (tank.health <= 0)
+		g_IsGameOver = true;
+}
+
+void ResolveObstacleHit(int obstacleIndex)
+{
+	Obstacle& obstacle{ g_pObstacles[obstacleIndex] };
+	obstacle.health--;
+	g_IsShooting = false;
+}
+
 #pragma endregion Logic
 
 #pragma region DrawFunctions
@@ -259,7 +313,8 @@ void DrawObstacles()
 		Obstacle& obstacle{ g_pObstacles[i] };
 		GridCell& obstacleCell{ g_Grid[GetLinearIndexFrom2D(obstacle.obstacleIndex, g_GridColumns)] };
 		SetColor(0.0f, 0.0f, 0.0f);
-		FillRect(obstacleCell.cell);
+		if (0 < obstacle.health)
+			FillRect(obstacleCell.cell);
 	}
 }
 

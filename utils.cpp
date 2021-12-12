@@ -570,6 +570,19 @@ namespace utils
 		return false;
 	}
 
+	bool IsIntersecting(const Circlef& circle, const Rectf& rectangle)
+	{
+		Point2f rectangleCenter{ GetCenterOfRectangle(rectangle) };
+		float distanceX = abs(circle.center.x - rectangleCenter.x);
+		float distanceY = abs(circle.center.y - rectangleCenter.y);
+		if ((rectangle.width / 2) + circle.radius < distanceX || (rectangle.height / 2) + circle.radius < distanceY)
+			return false;
+		if (distanceX <= (rectangle.width / 2) || distanceY <= (rectangle.height / 2))
+			return true;
+		float cornerDistance{ powf(distanceX - (rectangle.width / 2), 2) + powf(distanceY - (rectangle.height / 2), 2) };
+		return cornerDistance <= powf(circle.radius, 2);
+	}
+
 	Point2f GetCenterOfRectangle(const Rectf& rectangle)
 	{
 		float x{ (rectangle.left * 2 + rectangle.width) / 2 };

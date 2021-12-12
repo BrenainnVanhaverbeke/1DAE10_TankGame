@@ -85,6 +85,8 @@ namespace utils
 	bool IsOverlapping(const Rectf& rectangleA, const Rectf& rectangleB);
 	bool IsOverlapping(const Circlef& circleA, const Circlef& circleB);
 
+	bool IsIntersecting(const Circlef& circle, const Rectf& rectangle);
+
 	Point2f GetCenterOfRectangle(const Rectf& rectangle);
 
 #pragma endregion CollisionFunctionality
