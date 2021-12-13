@@ -5,7 +5,7 @@
 using namespace utils;
 #pragma region gameInformation
 // Set your name and group in the title here
-std::string g_WindowTitle{ "Tank Game - Brenainn + Tom - 1DAE10-11" };
+std::string g_WindowTitle{ "Tank Game - Brenainn Vanhaverbeke - Tom Duterte - 1DAE10-11" };
 
 // Change the window dimensions here
 float g_WindowWidth{ 1280 };
@@ -69,6 +69,8 @@ const Index2D g_StartingPositions[g_AmountOfPlayers]{ Index2D{1, g_GridRows - 2}
 int g_TurnCounter{ 0 };
 bool g_IsShooting{ false };
 bool g_IsGameOver{ false };
+bool g_IsIPressed{ false };
+bool g_IsLoggedToConsole{ false };
 
 Texture g_Tile{};
 Texture g_Background{};
@@ -113,8 +115,9 @@ void DrawObstacles();
 void DrawTanks();
 void DrawBarrels();
 void DrawProjectile();
+void DrawEndScreen();
 void DrawInstructions();
-//void DrawTile();
+Point2f DrawInstructionsBackground();
 
 #pragma endregion DrawFunctions
 

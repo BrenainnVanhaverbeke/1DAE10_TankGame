@@ -20,14 +20,20 @@ void Start()
 
 void Draw()
 {
-	ClearBackground();
-	DrawBackground();
-	DrawGrid();
-	DrawObstacles();
-	DrawTanks();
-	if (g_IsShooting)
-		DrawProjectile();
-	//DrawInstructions();
+	ClearBackground(0.0f, 0.0f, 0.0f);
+	if (!g_IsGameOver)
+	{
+		DrawBackground();
+		DrawGrid();
+		DrawObstacles();
+		DrawTanks();
+		if (g_IsShooting)
+			DrawProjectile();
+	}
+	else
+		DrawEndScreen();
+	if (g_IsIPressed)
+		DrawInstructions();
 }
 
 void Update(float elapsedSec)
@@ -54,31 +60,42 @@ void OnKeyDownEvent(SDL_Keycode key) {}
 
 void OnKeyUpEvent(SDL_Keycode key)
 {
-	switch (key)
+	if (!g_IsShooting)
 	{
-	case SDLK_LEFT:
-	case SDLK_a:
-		MoveTank(TankOrientation::LEFT);
-		break;
-	case SDLK_RIGHT:
-	case SDLK_d:
-		MoveTank(TankOrientation::RIGHT);
-		break;
-	case SDLK_DOWN:
-	case SDLK_s:
-		MoveTank(TankOrientation::DOWN);
-		break;
-	case SDLK_UP:
-	case SDLK_w:
-		MoveTank(TankOrientation::UP);
-		break;
+		switch (key)
+		{
+		case SDLK_LEFT:
+		case SDLK_a:
+			MoveTank(TankOrientation::LEFT);
+			break;
+		case SDLK_RIGHT:
+		case SDLK_d:
+			MoveTank(TankOrientation::RIGHT);
+			break;
+		case SDLK_DOWN:
+		case SDLK_s:
+			MoveTank(TankOrientation::DOWN);
+			break;
+		case SDLK_UP:
+		case SDLK_w:
+			MoveTank(TankOrientation::UP);
+			break;
+		}
+	}
+	if (key == SDLK_i)
+	{
+		g_IsIPressed = !g_IsIPressed;
+		g_IsLoggedToConsole = false;
 	}
 }
 
 void OnMouseMotionEvent(const SDL_MouseMotionEvent& e)
 {
-	g_MousePosition = Point2f{ (float)e.x, g_WindowHeight - (float)e.y };
-	g_Tanks[g_TurnCounter].barrelAngle = GetBarrelAngle(g_Tanks[g_TurnCounter].tankCenter, g_MousePosition);
+	if (!g_IsShooting && !g_IsGameOver)
+	{
+		g_MousePosition = Point2f{ (float)e.x, g_WindowHeight - (float)e.y };
+		g_Tanks[g_TurnCounter].barrelAngle = GetBarrelAngle(g_Tanks[g_TurnCounter].tankCenter, g_MousePosition);
+	}
 }
 
 void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
@@ -88,10 +105,13 @@ void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 
 void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 {
-	Tank& activeTank{ g_Tanks[g_TurnCounter] };
-	g_IsShooting = true;
-	g_ProjectileVector = GetVectorToDirectionWithForce(g_Tanks[g_TurnCounter].barrelAngle, g_ProjectileSpeed);
-	g_Projectile.center = activeTank.barrelEnd;
+	if (!g_IsShooting && !g_IsGameOver)
+	{
+		Tank& activeTank{ g_Tanks[g_TurnCounter] };
+		g_IsShooting = true;
+		g_ProjectileVector = GetVectorToDirectionWithForce(g_Tanks[g_TurnCounter].barrelAngle, g_ProjectileSpeed);
+		g_Projectile.center = activeTank.barrelEnd;
+	}
 }
 #pragma endregion inputHandling
 
@@ -231,11 +251,23 @@ void UpdateProjectile(float elapsedSec)
 		if (-1 < tankIndex)
 		{
 			ResolveTankHit(tankIndex);
+			if (!g_IsGameOver)
+				g_TurnCounter = (g_TurnCounter + 1) % g_AmountOfPlayers;
 			return;
 		}
 		int obstacleIndex{ CheckObstacleHit() };
 		if (-1 < obstacleIndex)
+		{
 			ResolveObstacleHit(obstacleIndex);
+			g_TurnCounter = (g_TurnCounter + 1) % g_AmountOfPlayers;
+			return;
+		}
+		if (g_Projectile.center.x < 0 || g_WindowWidth < g_Projectile.center.x
+			|| g_Projectile.center.y < 0 || g_WindowHeight < g_Projectile.center.y)
+		{
+			g_IsShooting = false;
+			g_TurnCounter = (g_TurnCounter + 1) % g_AmountOfPlayers;
+		}
 	}
 }
 
@@ -278,6 +310,11 @@ void ResolveObstacleHit(int obstacleIndex)
 {
 	Obstacle& obstacle{ g_pObstacles[obstacleIndex] };
 	obstacle.health--;
+	if (obstacle.health <= 0)
+	{
+		int linearIndex{ GetLinearIndexFrom2D(obstacle.obstacleIndex, g_GridColumns) };
+		g_Grid[linearIndex].isFree = true;
+	}
 	g_IsShooting = false;
 }
 
@@ -353,23 +390,60 @@ void DrawInstructions()
 {
 	const int fontPoints{ 24 };
 	const int instructionLines{ 6 };
+	Point2f origin{ DrawInstructionsBackground() };
+	origin.x += 20;
+	origin.y += 15;
 	std::string pGameInstructions[instructionLines]
 	{
-		"W or Up key to move tank up",
-		"A or Left key to move tank left",
-		"S or Down key to move tank down",
-		"D or Right key to move tank right"
-		"Click to shoot in the direction of the mouse pointer.",
-		"The game is turn based, you can either move or shoot."
+		"- W or Up key to move tank up",
+		"- A or Left key to move tank left",
+		"- S or Down key to move tank down",
+		"- D or Right key to move tank right",
+		"- Click to shoot in the direction of the mouse pointer.",
+		"- The game is turn based, you can either move or shoot."
 	};
-	for (int i{ 0 }; i < instructionLines; ++i)
+	for (int i{ 0 }; i < instructionLines; i++)
 	{
 		Texture textTexture{};
-		bool successful{ TextureFromString(pGameInstructions[i], "Resources/DIN-Light.otf", fontPoints, Color4f{ 1.0f, 1.0f, 1.0f, 1.0f }, textTexture) };
+		bool successful{ TextureFromString(pGameInstructions[instructionLines - 1 - i], "Resources/DIN-Light.otf", fontPoints, Color4f{ 1.0f, 1.0f, 1.0f, 1.0f }, textTexture) };
 		if (successful)
-			DrawTexture(textTexture, Point2f{ 0.0f, g_WindowHeight - (textTexture.height * (i + 1)) });
+		{
+			DrawTexture(textTexture, origin);
+			origin.y += textTexture.height;
+		}
 		DeleteTexture(textTexture);
+		if (!g_IsLoggedToConsole)
+			std::cout << pGameInstructions[i] << std::endl;
 	}
+	g_IsLoggedToConsole = true;
+}
+
+Point2f DrawInstructionsBackground()
+{
+	const float backgroundHeight{ 200.0f };
+	const float backgroundWidth{ 650.0f };
+	const float left{ (g_WindowWidth - backgroundWidth) / 2 };
+	const float bottom{ (g_WindowHeight - backgroundHeight) / 2 };
+	SetColor(0.0f, 0.0f, 0.0f, 0.5f);
+	FillRect(left, bottom, backgroundWidth, backgroundHeight);
+	return Point2f{ left, bottom };
+}
+
+void DrawEndScreen()
+{
+	const int fontPointsHeader{ 32 };
+	const int fontPointsSubtext{ 24 };
+	const std::string headerText{ "You win," };
+	const std::string subText{ "You sexy motherfucker!" };
+	Texture textTexture{};
+	TextureFromString(headerText, "Resources/DIN-Light.otf", fontPointsHeader, g_White, textTexture);
+	Point2f textDestination{ (g_WindowWidth - textTexture.width) / 2, (g_WindowHeight - textTexture.height) * 0.66f };
+	DrawTexture(textTexture, textDestination);
+	TextureFromString(subText, "Resources/DIN-Light.otf", fontPointsSubtext, g_White, textTexture);
+	textDestination.x = (g_WindowWidth - textTexture.width) / 2;
+	textDestination.y -= textTexture.height;
+	DrawTexture(textTexture, textDestination);
+	DeleteTexture(textTexture);
 }
 
 #pragma endregion DrawFunctions
